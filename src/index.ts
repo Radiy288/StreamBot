@@ -32,16 +32,16 @@ const client = new Client();
 // Stream status object
 const queueService = new QueueService();
 const streamStatus = {
-	joined: false,
-	joinsucc: false,
-	playing: false,
-	manualStop: false,
-	channelInfo: {
-		guildId: config.guildId,
-		channelId: config.videoChannelId,
-		cmdChannelId: config.cmdChannelId
-	},
-	queue: queueService.getQueueStatus()
+    joined: false,
+    joinsucc: false,
+    playing: false,
+    manualStop: false,
+    channelInfo: {
+        guildId: "",           // будет заполняться динамически
+        channelId: "",         // будет заполняться динамически
+        cmdChannelId: config.cmdChannelId
+    },
+    queue: queueService.getQueueStatus()
 }
 
 // Create services
