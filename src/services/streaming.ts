@@ -175,25 +175,29 @@ export class StreamingService {
 	}
 
 	private async ensureVoiceConnection(guildId: string, channelId: string, title?: string): Promise<void> {
-		// Only join voice if not already connected
-		if (!this.streamStatus.joined || !this.streamer.voiceConnection) {
-			await this.streamer.joinVoice(guildId, channelId);
-			this.streamStatus.joined = true;
+		// if already connected doing nothing
+		if (this.streamStatus.joined && 
+			this.streamer.voiceConnection && 
+			this.streamStatus.channelInfo.channelId === channelId) {
+			return;
 		}
+
+		await this.streamer.joinVoice(guildId, channelId);
+		
+		this.streamStatus.joined = true;
 		this.streamStatus.playing = true;
-		this.streamStatus.channelInfo = { guildId, channelId, cmdChannelId: config.cmdChannelId! };
+		this.streamStatus.channelInfo = { 
+			guildId, 
+			channelId, 
+			cmdChannelId: config.cmdChannelId || "" 
+		};
 
 		if (title) {
 			this.streamer.client.user?.setActivity(DiscordUtils.status_watch(title));
 		}
 
-		// Wait for voice connection to be fully ready
-		await new Promise(resolve => setTimeout(resolve, 2000));
-
-		// Verify voice connection exists
-		if (!this.streamer.voiceConnection) {
-			throw new Error('Voice connection is not established');
-		}
+		// small delay for connection stabilize
+		await new Promise(resolve => setTimeout(resolve, 1500));
 	}
 
 	private setupStreamConfiguration(videoParams?: { width: number, height: number, fps?: number, bitrate?: number }): any {
@@ -371,7 +375,14 @@ export class StreamingService {
 	}
 
 	public async playVideo(message: Message, videoSource: string, title?: string, videoParams?: { width: number, height: number, fps?: number, bitrate?: number }): Promise<void> {
-		const [guildId, channelId] = [config.guildId, config.videoChannelId];
+		const guildId = message.guild?.id;
+    	const channelId = message.member?.voice.channel?.id;
+
+		if (!guildId || !channelId) {
+			await DiscordUtils.sendError(message, 'You must be in the voice channel!');
+			return;
+		}
+
 		this.streamStatus.manualStop = false;
 
 		if (title) {
