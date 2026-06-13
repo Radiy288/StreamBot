@@ -37,7 +37,7 @@ const streamStatus = {
     playing: false,
     manualStop: false,
     channelInfo: {
-        guildId: "",           // будет заполняться динамически
+        guildId: config.guildId,
         channelId: "",         // будет заполняться динамически
         cmdChannelId: config.cmdChannelId
     },
